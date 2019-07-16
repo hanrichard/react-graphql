@@ -6,7 +6,8 @@ const {
     GraphQLString,
     GraphQLInt,
     GraphQLList,
-    GraphQLSchema
+    GraphQLSchema,
+    GraphQLNonNull,
 } = graphql
 
 
@@ -71,23 +72,46 @@ const RootQuery = new GraphQLObjectType({
 })
 
 
+
 const mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
         addUser: {
             type: UserType,
             args: {
-                firstname: {type: GraphQLString},
-                age: {type: GraphQLInt},
+                firstname: {type: new GraphQLNonNull(GraphQLString)},
+                age: {type: GraphQLNonNull(GraphQLInt)},
                 companyId: {type: GraphQLString}
             },
-            resolve() {
-
+            resolve(parenetValue, {firstname, age, companyId}) {
+                return axios.post(`http://localhost:3000/users/`, { firstname, age, companyId}).then(res=>res.data)
+            }
+        },
+        deleteUser: {
+            type: UserType,
+            args: {
+                id: {type: new GraphQLNonNull(GraphQLString)},
+            },
+            resolve(parenetValue, args) {
+                return axios.delete(`http://localhost:3000/users/${args.id}`).then(res=>res.data)
+            }
+        },
+        editUser: {
+            type: UserType,
+            args: {
+                id: {type: new GraphQLNonNull(GraphQLString)},
+                firstname: {type: new GraphQLNonNull(GraphQLString)},
+                age: {type: GraphQLNonNull(GraphQLInt)},
+                companyId: {type: GraphQLString}
+            },
+            resolve(parenetValue, {id, firstname, age, companyId}) {
+                return axios.patch(`http://localhost:3000/users/${id}`, {firstname, age, companyId}).then(res=>res.data)
             }
         }
     }
 })
 
 module.exports = new GraphQLSchema({
-    query: RootQuery
+    query: RootQuery,
+    mutation
 })
